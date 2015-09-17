@@ -12,6 +12,7 @@
     <artifactId>spring-boot-shiro-orient-ionic-web</artifactId>
 
     <properties>
+        <mainClass>com.github.theborakompanioni.Application</mainClass>
         <webapp.path>apps/ionicMaterialApp/www</webapp.path>
     </properties>
 
@@ -37,12 +38,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
