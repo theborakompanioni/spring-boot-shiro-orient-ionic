@@ -19,7 +19,7 @@ java -jar spring-boot-ionic-material-web/target/spring-boot-ionic-material-web-<
 ```
 mvn compile
 mvn spring-boot:run -pl spring-boot-ionic-material-web
-´´´
+```
 
 ## Test
 ```
