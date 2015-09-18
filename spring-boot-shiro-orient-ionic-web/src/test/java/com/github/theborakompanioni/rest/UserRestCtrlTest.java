@@ -12,6 +12,7 @@ import com.github.theborakompanioni.repository.RoleRepository;
 import com.github.theborakompanioni.repository.UserRepository;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.credential.DefaultPasswordService;
+import org.apache.shiro.web.servlet.AbstractShiroFilter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,27 +20,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.testng.AssertJUnit.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes
         = {Application.class, OrientDbConfiguration.class, ShiroConfiguration.class})
 @WebIntegrationTest("server.port:0")
-public class UserRestCtrlTest extends AbstractTestNGSpringContextTests {
+public class UserRestCtrlTest extends AbstractJUnit4SpringContextTests {
     private final String USER_NAME = "John Doe";
     private final String USER_EMAIL = "john_doe@example.org";
     private final String USER_PWD = "any_password";
 
     @Autowired
     private DefaultPasswordService passwordService;
+
+    @Autowired
+    private AbstractShiroFilter shiroFilter;
 
     @Autowired
     private UserRepository userRepo;
@@ -59,7 +64,7 @@ public class UserRestCtrlTest extends AbstractTestNGSpringContextTests {
     public void beforeTest() {
         setupRepositories();
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac)
-                .dispatchOptions(true)
+                .dispatchOptions(true).addFilters(shiroFilter)
                 .build();
     }
 
@@ -93,7 +98,7 @@ public class UserRestCtrlTest extends AbstractTestNGSpringContextTests {
 
     @Test
     public void test_count() {
-        assertEquals(1, userRepo.count());
+        assertThat(userRepo.count(), is(1L));
     }
 
     @Test
@@ -103,7 +108,7 @@ public class UserRestCtrlTest extends AbstractTestNGSpringContextTests {
         final String json = new ObjectMapper().writeValueAsString(
                 new UsernamePasswordToken(admin.getEmail(), USER_PWD));
 
-        mockMvc.perform(post("/users/auth", json)
+        mockMvc.perform(post("/users/auth").content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -114,7 +119,7 @@ public class UserRestCtrlTest extends AbstractTestNGSpringContextTests {
         final String json = new ObjectMapper().writeValueAsString(
                 new UsernamePasswordToken(USER_EMAIL, "wrong password"));
 
-        mockMvc.perform(post("/users/auth", json)
+        mockMvc.perform(post("/users/auth").content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());

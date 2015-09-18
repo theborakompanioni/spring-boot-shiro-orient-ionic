@@ -7,6 +7,7 @@ import com.github.theborakompanioni.ShiroConfiguration;
 import com.github.theborakompanioni.model.User;
 import com.github.theborakompanioni.repository.UserRepository;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.web.servlet.AbstractShiroFilter;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -29,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringApplicationConfiguration(classes
         = {Application.class, OrientDbConfiguration.class, ShiroConfiguration.class})
 @WebIntegrationTest("server.port:0")
-public class UserRestCtrlIT {
+public class UserRestCtrlIT extends AbstractJUnit4SpringContextTests {
     private final String ADMIN_USER_EMAIL = "admin@example.com";
     private final String ADMIN_USER_PASSWORD = "admin";
 
@@ -39,12 +41,15 @@ public class UserRestCtrlIT {
     @Autowired
     private WebApplicationContext wac;
 
+    @Autowired
+    private AbstractShiroFilter shiroFilter;
+
     private MockMvc mockMvc;
 
     @Before
     public void beforeTest() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac)
-                .dispatchOptions(true)
+                .dispatchOptions(true).addFilters(shiroFilter)
                 .build();
     }
 
@@ -62,7 +67,7 @@ public class UserRestCtrlIT {
         final String json = new ObjectMapper().writeValueAsString(
                 new UsernamePasswordToken(admin.getEmail(), ADMIN_USER_PASSWORD));
 
-        mockMvc.perform(post("/users/auth", json)
+        mockMvc.perform(post("/users/auth").content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -73,7 +78,7 @@ public class UserRestCtrlIT {
         final String json = new ObjectMapper().writeValueAsString(
                 new UsernamePasswordToken(ADMIN_USER_EMAIL, "wrong password"));
 
-        mockMvc.perform(post("/users/auth", json)
+        mockMvc.perform(post("/users/auth").content(json)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
