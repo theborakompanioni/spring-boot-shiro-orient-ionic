@@ -12,7 +12,8 @@
         <module>spring-boot-shiro-orient-ionic-web</module>
     </modules>
 
-    <name>spring boot + shiro + orient + ionic powered template</name>
+    <name>spring-boot-shiro-orient-ionic-parent</name>
+    <description>spring boot + shiro + orient + ionic powered template</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
